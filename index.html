@@ -27,7 +27,7 @@
         }
         .progress-bar-fg {
             background-color: #ef4444; /* red-500 */
-            transition: width 1.5s ease-in-out;
+            transition: width 0.1s linear; /* Make transition faster for smooth updates */
         }
         /* Custom styles for date picker icon */
         input[type="date"]::-webkit-calendar-picker-indicator {
@@ -73,10 +73,8 @@
                  <p id="quote" class="text-gray-400 mt-2 italic"></p>
             </header>
             
-            <!-- Time Passed Progress Bar -->
             <div id="progress-bar-card" class="card">
                 <h3 class="text-lg font-semibold text-white mb-3">Semester Elapsed</h3>
-                <!-- Increased height of progress bar -->
                 <div class="w-full progress-bar-bg rounded-full h-10">
                     <div id="progressBar" class="progress-bar-fg h-10 rounded-full text-center text-white text-sm flex items-center justify-center" style="width: 0%;">
                         <span id="progressText" class="font-semibold mono"></span>
@@ -84,43 +82,20 @@
                 </div>
             </div>
 
-            <!-- Countdown Timer -->
             <div class="card text-center">
                  <h3 id="countdown-title" class="text-lg font-semibold text-white mb-3">Time Remaining Until The End</h3>
                  <div id="countdown" class="grid grid-cols-2 md:grid-cols-4 gap-4 text-white">
-                    <div class="bg-gray-700 p-4 rounded-lg">
-                        <div id="days" class="text-4xl font-bold mono">00</div>
-                        <div class="text-sm text-gray-400">Days</div>
-                    </div>
-                    <div class="bg-gray-700 p-4 rounded-lg">
-                        <div id="hours" class="text-4xl font-bold mono">00</div>
-                        <div class="text-sm text-gray-400">Hours</div>
-                    </div>
-                    <div class="bg-gray-700 p-4 rounded-lg">
-                        <div id="minutes" class="text-4xl font-bold mono">00</div>
-                        <div class="text-sm text-gray-400">Minutes</div>
-                    </div>
-                    <div class="bg-gray-700 p-4 rounded-lg">
-                        <div id="seconds" class="text-4xl font-bold mono">00</div>
-                        <div class="text-sm text-gray-400">Seconds</div>
-                    </div>
+                    <div class="bg-gray-700 p-4 rounded-lg"><div id="days" class="text-4xl font-bold mono">00</div><div class="text-sm text-gray-400">Days</div></div>
+                    <div class="bg-gray-700 p-4 rounded-lg"><div id="hours" class="text-4xl font-bold mono">00</div><div class="text-sm text-gray-400">Hours</div></div>
+                    <div class="bg-gray-700 p-4 rounded-lg"><div id="minutes" class="text-4xl font-bold mono">00</div><div class="text-sm text-gray-400">Minutes</div></div>
+                    <div class="bg-gray-700 p-4 rounded-lg"><div id="seconds" class="text-4xl font-bold mono">00</div><div class="text-sm text-gray-400">Seconds</div></div>
                  </div>
             </div>
             
-            <!-- Other Statistics -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div id="weeks-passed-card" class="card text-center">
-                    <h4 class="text-md font-semibold text-gray-400 mb-2">Weeks Passed</h4>
-                    <p id="weeksPassed" class="text-3xl font-bold text-white mono">0</p>
-                </div>
-                <div id="weeks-left-card" class="card text-center">
-                    <h4 class="text-md font-semibold text-gray-400 mb-2">Weeks Remaining</h4>
-                    <p id="weeksLeft" class="text-3xl font-bold text-red-400 mono">0</p>
-                </div>
-                 <div id="total-days-card" class="card text-center">
-                    <h4 class="text-md font-semibold text-gray-400 mb-2">Semester Duration</h4>
-                    <p id="totalDays" class="text-3xl font-bold text-white mono">0</p>
-                </div>
+                <div id="weeks-passed-card" class="card text-center"><h4 class="text-md font-semibold text-gray-400 mb-2">Weeks Passed</h4><p id="weeksPassed" class="text-3xl font-bold text-white mono">0</p></div>
+                <div id="weeks-left-card" class="card text-center"><h4 class="text-md font-semibold text-gray-400 mb-2">Weeks Remaining</h4><p id="weeksLeft" class="text-3xl font-bold text-red-400 mono">0</p></div>
+                <div id="total-days-card" class="card text-center"><h4 class="text-md font-semibold text-gray-400 mb-2">Semester Duration</h4><p id="totalDays" class="text-3xl font-bold text-white mono">0</p></div>
             </div>
 
             <div class="text-center mt-6">
@@ -138,28 +113,24 @@
         const inputSection = document.getElementById('input-section');
         const resultsSection = document.getElementById('results-section');
         const errorMessage = document.getElementById('error-message');
-        
-        // Results display elements
         const progressBarCard = document.getElementById('progress-bar-card');
         const progressBar = document.getElementById('progressBar');
         const progressText = document.getElementById('progressText');
-        
         const countdownTitle = document.getElementById('countdown-title');
         const daysEl = document.getElementById('days');
         const hoursEl = document.getElementById('hours');
         const minutesEl = document.getElementById('minutes');
         const secondsEl = document.getElementById('seconds');
-
         const weeksPassedCard = document.getElementById('weeks-passed-card');
         const weeksLeftCard = document.getElementById('weeks-left-card');
         const totalDaysCard = document.getElementById('total-days-card');
-
         const weeksPassedEl = document.getElementById('weeksPassed');
         const weeksLeftEl = document.getElementById('weeksLeft');
         const totalDaysEl = document.getElementById('totalDays');
         const quoteEl = document.getElementById('quote');
 
         let countdownInterval;
+        let progressInterval; // New interval for the progress bar
 
         const quotes = [
             "The bad news is time flies. The good news is you're the pilot... of a crashing plane.",
@@ -169,7 +140,6 @@
             "Time is what we want most, but what we use worst."
         ];
         
-        // --- Cookie Helper Functions ---
         function setCookie(name, value, days) {
             let expires = "";
             if (days) {
@@ -191,11 +161,9 @@
             return null;
         }
 
-        // --- Load from Cookies on Page Load ---
         function loadFromCookies() {
             const savedStartDate = getCookie('semesterStartDate');
             const savedEndDate = getCookie('semesterEndDate');
-
             if (savedStartDate && savedEndDate) {
                 document.getElementById('startDate').value = savedStartDate;
                 document.getElementById('endDate').value = savedEndDate;
@@ -208,6 +176,10 @@
         resetBtn.addEventListener('click', handleReset);
 
         function handleCalculation() {
+            // Clear any existing intervals before starting new ones
+            if (countdownInterval) clearInterval(countdownInterval);
+            if (progressInterval) clearInterval(progressInterval);
+
             const startDateValue = document.getElementById('startDate').value;
             const endDateValue = document.getElementById('endDate').value;
 
@@ -237,54 +209,54 @@
             totalDaysEl.textContent = totalDays;
 
             if (now < startDate) {
-                // --- PRE-SEMESTER STATE ---
                 quoteEl.textContent = `"The beginning is the most important part of the work." - Plato`;
                 progressBarCard.classList.add('hidden');
                 weeksPassedCard.classList.add('hidden');
                 weeksLeftCard.classList.add('hidden');
-                totalDaysCard.classList.remove('hidden'); // Ensure this is visible
-                
+                totalDaysCard.classList.remove('hidden');
                 countdownTitle.textContent = "Semester Begins In";
-                
-                if (countdownInterval) clearInterval(countdownInterval);
                 countdownInterval = setInterval(() => updateCountdown(startDate), 1000);
                 updateCountdown(startDate);
 
             } else if (now > endDate) {
-                // --- POST-SEMESTER STATE ---
                 showError("This semester has already ended. The dread is over... or has it just begun?");
                 inputSection.classList.remove('hidden');
                 resultsSection.classList.add('hidden');
                 return;
 
             } else {
-                // --- ACTIVE SEMESTER STATE ---
                 quoteEl.textContent = `"${quotes[Math.floor(Math.random() * quotes.length)]}"`;
                 progressBarCard.classList.remove('hidden');
                 weeksPassedCard.classList.remove('hidden');
                 weeksLeftCard.classList.remove('hidden');
                 totalDaysCard.classList.remove('hidden');
-
                 countdownTitle.textContent = "Time Remaining Until The End";
 
+                // Update static weeks stats once
                 const elapsedDuration = now.getTime() - startDate.getTime();
-                const percentagePassed = (elapsedDuration / totalDuration) * 100;
                 const weeksPassed = Math.floor(elapsedDuration / (1000 * 60 * 60 * 24 * 7));
                 const weeksLeft = Math.ceil((totalDuration - elapsedDuration) / (1000 * 60 * 60 * 24 * 7));
+                weeksPassedEl.textContent = weeksPassed;
+                weeksLeftEl.textContent = weeksLeft;
 
-                updateStaticStats(percentagePassed, weeksPassed, weeksLeft);
-                
-                if (countdownInterval) clearInterval(countdownInterval);
+                // Start live updates
                 countdownInterval = setInterval(() => updateCountdown(endDate), 1000);
+                progressInterval = setInterval(() => updateProgressBar(startDate, endDate), 50); // Update progress bar frequently
                 updateCountdown(endDate);
+                updateProgressBar(startDate, endDate);
             }
         }
 
-        function updateStaticStats(percentage, passed, left) {
-            progressBar.style.width = `${percentage.toFixed(7)}%`;
-            progressText.textContent = `${percentage.toFixed(7)}% Gone`;
-            weeksPassedEl.textContent = passed;
-            weeksLeftEl.textContent = left;
+        function updateProgressBar(startDate, endDate) {
+            const now = new Date().getTime();
+            const totalDuration = endDate.getTime() - startDate.getTime();
+            const elapsedDuration = now - startDate.getTime();
+
+            if (elapsedDuration >= 0 && elapsedDuration <= totalDuration) {
+                const percentagePassed = (elapsedDuration / totalDuration) * 100;
+                progressBar.style.width = `${percentagePassed}%`;
+                progressText.textContent = `${percentagePassed.toFixed(7)}% Gone`;
+            }
         }
 
         function flickerElement(el, newValue) {
@@ -300,8 +272,6 @@
             const distance = targetDate.getTime() - now;
 
             if (distance < 0) {
-                clearInterval(countdownInterval);
-                // Could trigger a re-calculation here if the semester just started.
                 handleCalculation(); 
                 return;
             }
@@ -321,8 +291,8 @@
             resultsSection.classList.add('hidden');
             inputSection.classList.remove('hidden');
             if (countdownInterval) clearInterval(countdownInterval);
+            if (progressInterval) clearInterval(progressInterval);
             
-            // Make sure all elements are visible again for the next calculation
             progressBarCard.classList.remove('hidden');
             weeksPassedCard.classList.remove('hidden');
             weeksLeftCard.classList.remove('hidden');
